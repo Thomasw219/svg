@@ -5,3 +5,4 @@ exp
 *.csv
 
 data/fig
+*.pyc

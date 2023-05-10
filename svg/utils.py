@@ -172,7 +172,7 @@ def make_norm_env(cfg):
         register_mbpo_environments()
         env = gym.make('AntTruncatedObs-v2')
         env = RescaleAction(env, -1., 1.)
-        assert not cfg.max_episode_steps
+        # assert not cfg.max_episode_steps
 
         env._max_episode_steps = env.env._max_episode_steps
 
@@ -212,6 +212,46 @@ def make_norm_env(cfg):
             frame = env.env.render(mode='rgb_array')
             return frame
         env.render = render
+
+        def set_seed(seed):
+            return env.env.seed(seed)
+    elif cfg.env_name == 'url_cheetah':
+        env = gym.make('HalfCheetah-v2')
+        env = RescaleAction(env, -1., 1.)
+
+        env._max_episode_steps = cfg.max_episode_steps
+
+        def set_seed(seed):
+            return env.env.seed(seed)
+    elif cfg.env_name == 'url_ant':
+        env = gym.make('Ant-v3')
+        env = RescaleAction(env, -1., 1.)
+
+        env._max_episode_steps = cfg.max_episode_steps
+
+        def set_seed(seed):
+            return env.env.seed(seed)
+    elif cfg.env_name == 'url_walker2d':
+        env = gym.make('Walker2d-v3')
+        env = RescaleAction(env, -1., 1.)
+
+        env._max_episode_steps = cfg.max_episode_steps
+
+        def set_seed(seed):
+            return env.env.seed(seed)
+    elif cfg.env_name == 'url_hopper':
+        env = gym.make('Hopper-v3')
+        env = RescaleAction(env, -1., 1.)
+
+        env._max_episode_steps = cfg.max_episode_steps
+
+        def set_seed(seed):
+            return env.env.seed(seed)
+    elif cfg.env_name == 'url_pendulum':
+        env = gym.make('Pendulum-v1')
+        env = RescaleAction(env, -1., 1.)
+
+        env._max_episode_steps = cfg.max_episode_steps
 
         def set_seed(seed):
             return env.env.seed(seed)

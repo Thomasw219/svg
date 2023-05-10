@@ -1,5 +1,5 @@
 defaults:
-  - env: mbpo_ant
+  - env: ??
   # - hydra/sweeper: svg
   - hydra/launcher: submitit_slurm
 
@@ -38,7 +38,7 @@ seed: 1
 
 # For debugging:
 num_initial_states: null # Use a subset of initial states
-max_episode_steps: null # If set, use shorter episodes
+max_episode_steps: 100 # If set, use shorter episodes
 
 model_free_hidden_dim: 512
 model_free_hidden_depth: 4

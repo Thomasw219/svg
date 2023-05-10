@@ -27,6 +27,9 @@ from IPython.core import ultratb
 sys.excepthook = ultratb.FormattedTB(
     mode='Plain', color_scheme='Neutral', call_pdb=1)
 
+from utils import EpisodeLengthWrapper, flatten
+from comet_ml import Experiment
+
 class Workspace(object):
     def __init__(self, cfg):
         self.work_dir = os.getcwd()
@@ -39,9 +42,16 @@ class Workspace(object):
                              log_frequency=cfg.log_freq,
                              agent='sac_svg')
 
+        self.experiment = Experiment(
+            api_key = "e1Xmlzbz1cCLgwe0G8m7G58ns",
+            project_name = "svg",
+            workspace="thomasw219",
+        )
+        self.experiment.add_tag(self.cfg.env_name)
+
         utils.set_seed_everywhere(cfg.seed)
         self.device = torch.device(cfg.device)
-        self.env = utils.make_norm_env(cfg)
+        self.env = EpisodeLengthWrapper(utils.make_norm_env(cfg), 100)
         self.episode = 0
         self.episode_step = 0
         self.episode_reward = 0
@@ -54,6 +64,8 @@ class Workspace(object):
             float(self.env.action_space.high.max())
         ]
         self.agent = hydra.utils.instantiate(cfg.agent)
+
+        self.experiment.log_parameters(flatten(self.cfg))
 
         if isinstance(cfg.replay_buffer_capacity, str):
             cfg.replay_buffer_capacity = int(eval(cfg.replay_buffer_capacity))
@@ -90,9 +102,9 @@ class Workspace(object):
                     if self.cfg.normalize_obs:
                         mu, sigma = self.replay_buffer.get_obs_stats()
                         obs_norm = (obs - mu) / sigma
-                        action = self.agent.act(obs_norm, sample=False)
+                        action = self.agent.act(obs_norm, sample=True)
                     else:
-                        action = self.agent.act(obs, sample=False)
+                        action = self.agent.act(obs, sample=True)
                 obs, reward, done, _ = self.env.step(action)
                 self.video_recorder.record(self.env)
                 episode_reward += reward
@@ -100,6 +112,7 @@ class Workspace(object):
 
             self.video_recorder.save(f'{self.step}.mp4')
             self.logger.log('eval/episode_reward', episode_reward, self.step)
+            self.experiment.log_metric("eval/episode_reward", episode_reward, self.step)
         if self.cfg.fixed_eval:
             self.env.set_seed(None)
         self.logger.dump(self.step)
@@ -120,8 +133,10 @@ class Workspace(object):
                 if self.step > 0:
                     self.logger.log(
                         'train/episode_reward', self.episode_reward, self.step)
+                    self.experiment.log_metric("train/episode_reward", self.episode_reward, self.step)
                     self.logger.log('train/duration',
                                     time.time() - start_time, self.step)
+                    self.experiment.log_metric("train/duration", time.time() - start_time, self.step)
                     self.logger.log('train/episode', self.episode, self.step)
                     start_time = time.time()
                     self.logger.dump(
@@ -197,6 +212,7 @@ class Workspace(object):
             shutil.rmtree(self.replay_dir)
 
     def save(self, tag='latest'):
+        return
         path = os.path.join(self.work_dir, f'{tag}.pkl')
         with open(path, 'wb') as f:
             pkl.dump(self, f)
