@@ -1,0 +1,11 @@
+# @package _global_
+env_name: url_dm_hopper
+num_train_steps: 1e6
+eval_freq: 1000
+
+agent:
+  horizon: 3
+  warmup_steps: 10000
+
+
+

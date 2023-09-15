@@ -51,7 +51,7 @@ class Workspace(object):
 
         utils.set_seed_everywhere(cfg.seed)
         self.device = torch.device(cfg.device)
-        self.env = EpisodeLengthWrapper(utils.make_norm_env(cfg), 100)
+        self.env = EpisodeLengthWrapper(utils.make_norm_env(cfg), cfg.max_episode_steps)
         self.episode = 0
         self.episode_step = 0
         self.episode_reward = 0
@@ -111,8 +111,8 @@ class Workspace(object):
             episode_rewards.append(episode_reward)
 
             self.video_recorder.save(f'{self.step}.mp4')
-            self.logger.log('eval/episode_reward', episode_reward, self.step)
-            self.experiment.log_metric("eval/episode_reward", episode_reward, self.step)
+        self.logger.log('eval/episode_reward', np.mean(episode_rewards), self.step)
+        self.experiment.log_metric("eval/episode_reward", np.mean(episode_rewards), self.step)
         if self.cfg.fixed_eval:
             self.env.set_seed(None)
         self.logger.dump(self.step)
